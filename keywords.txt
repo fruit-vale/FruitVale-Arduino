@@ -1,0 +1,19 @@
+# Syntax Coloring Map
+FruitVale	KEYWORD1
+wifi	KEYWORD2
+sensor	KEYWORD2
+empresa	KEYWORD2
+host	KEYWORD2
+intervalo	KEYWORD2
+led	KEYWORD2
+botaoConfiguracao	KEYWORD2
+senhaPortal	KEYWORD2
+potenciaWifi	KEYWORD2
+conectado	KEYWORD2
+horaDeLer	KEYWORD2
+valor	KEYWORD2
+enviar	KEYWORD2
+abrirPortal	KEYWORD2
+apagarConfiguracao	KEYWORD2
+usuario	KEYWORD2
+empresaId	KEYWORD2
