@@ -96,10 +96,10 @@ void FruitVale::abrirPortal() {
             String(_senhaWifi.length() ? " placeholder=\"(manter a atual)\"" : "") + ">";
     html += "</fieldset><fieldset><legend>Sensor no app FruitVale</legend>";
     html += "<label for=\"user\">Usuário (código do sensor)</label>";
-    html += "<input id=\"user\" name=\"user\" required autocapitalize=\"off\" placeholder=\"emp1-estufa-01\" value=\"" +
+    html += "<input id=\"user\" name=\"user\" required autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" placeholder=\"emp1-estufa-01\" value=\"" +
             escapar(_usuario) + "\">";
     html += "<label for=\"mpass\">Senha do sensor</label>";
-    html += "<input id=\"mpass\" name=\"mpass\" type=\"password\"" +
+    html += "<input id=\"mpass\" name=\"mpass\" type=\"password\" autocapitalize=\"off\"" +
             String(_senhaMqtt.length() ? " placeholder=\"(manter a atual)\"" : " required") + ">";
     html += "<small>Os dois aparecem no app ao cadastrar o sensor (Sensores → Cadastrar sensor).</small>";
     html += "</fieldset><button type=\"submit\">Salvar e conectar</button></form>";
@@ -108,10 +108,13 @@ void FruitVale::abrirPortal() {
   });
 
   servidor.on("/salvar", HTTP_POST, [&]() {
+    // o teclado do celular costuma deixar espaço no fim (ao colar ou pelo autocompletar)
+    String usuario = servidor.arg("user");
+    String senhaMqtt = servidor.arg("mpass");
+    usuario.trim();
+    senhaMqtt.trim();
     const String ssid = servidor.arg("ssid");
-    const String usuario = servidor.arg("user");
     const String senhaWifi = servidor.arg("wpass");
-    const String senhaMqtt = servidor.arg("mpass");
 
     // campo de senha vazio = manter a senha já salva
     const bool temSenhaMqtt = senhaMqtt.length() || _senhaMqtt.length();

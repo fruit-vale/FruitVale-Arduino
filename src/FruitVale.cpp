@@ -22,6 +22,10 @@ constexpr uint32_t REINICIAR_SEM_CONEXAO_MS = 15UL * 60 * 1000;
 // janela, logo após ligar, em que apertar o botão abre o portal
 constexpr uint32_t JANELA_BOTAO_MS = 3000;
 
+// leituras_valores.valor é NUMERIC(14, 4): um valor acima disso faz a plataforma
+// recusar a mensagem inteira
+constexpr float VALOR_LIMITE = 1e10f;
+
 // 20 dados (o máximo por sensor na plataforma) com chaves de até 40 caracteres
 constexpr size_t MENSAGEM_MAX = 1280;
 // buffer do MQTT: a mensagem + tópico + cabeçalho do pacote
@@ -33,7 +37,7 @@ constexpr const char* NTP_2 = "pool.ntp.org";
 /** Já passou do instante? (seguro quando millis() volta a zero, a cada ~49 dias) */
 bool passou(uint32_t instanteMs) { return static_cast<int32_t>(millis() - instanteMs) >= 0; }
 
-bool relogioCerto() { return time(nullptr) > 1'700'000'000; }  // depois de 2023
+bool relogioCerto() { return time(nullptr) > 1700000000; }  // depois de 2023
 
 /** "emp12-estufa-01" → 12; -1 se não tiver o prefixo. */
 int empresaDoUsuario(const String& usuario) {
@@ -43,6 +47,17 @@ int empresaDoUsuario(const String& usuario) {
   for (int i = 3; i < hifen; i++)
     if (!isDigit(usuario[i])) return -1;
   return usuario.substring(3, hifen).toInt();
+}
+
+/** Mesma regra do app: minúsculas, números e _, começando por letra, até 40. */
+bool chaveValida(const char* chave) {
+  if (!chave || chave[0] < 'a' || chave[0] > 'z') return false;
+  size_t i = 0;
+  for (; chave[i]; i++) {
+    const char c = chave[i];
+    if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') || i >= 40) return false;
+  }
+  return strcmp(chave, "data_hora") != 0;  // reservada para o horário da leitura
 }
 
 const char* explicarEstadoMqtt(int estado) {
@@ -273,7 +288,9 @@ bool FruitVale::conectarMqtt() {
   if (_mqtt.connected()) return true;
   if (!passou(_proximaTentativaMqttMs)) return false;
 
-  log("conectando em %s:%u como %s...", _host.c_str(), _porta, _usuario.c_str());
+  // entre aspas e com o tamanho da senha: denuncia espaço sobrando ou senha cortada
+  log("conectando em %s:%u como \"%s\" (senha com %u caracteres)...", _host.c_str(), _porta, _usuario.c_str(),
+      static_cast<unsigned>(_senhaMqtt.length()));
   // client id = código do sensor: se a placa reiniciar, o broker troca a sessão antiga
   if (_mqtt.connect(_usuario.c_str(), _usuario.c_str(), _senhaMqtt.c_str())) {
     log("conectado à plataforma");
@@ -284,8 +301,9 @@ bool FruitVale::conectarMqtt() {
   }
 
   const int estado = _mqtt.state();
+  // o erro TLS só interessa quando o TLS falhou; com CONNACK recebido é resto de antes
   char erroTls[100] = "";
-  _tls.lastError(erroTls, sizeof(erroTls));
+  if (estado == MQTT_CONNECT_FAILED) _tls.lastError(erroTls, sizeof(erroTls));
   log("falha ao conectar (estado %d: %s)%s%s — nova tentativa em %lu s", estado, explicarEstadoMqtt(estado),
       erroTls[0] ? " | TLS: " : "", erroTls, static_cast<unsigned long>(_esperaMqttMs / 1000));
   _proximaTentativaMqttMs = millis() + _esperaMqttMs;
@@ -319,6 +337,15 @@ bool FruitVale::horaDeLer() {
 
 void FruitVale::valor(const char* chave, float valor, uint8_t casas) {
   if (isnan(valor) || isinf(valor)) return;  // leitura falha: fica de fora
+  // a plataforma ignoraria a chave inválida (ou recusaria o valor) sem a placa saber
+  if (!chaveValida(chave)) {
+    log("chave \"%s\" inválida: use a chave do dado no app (minúsculas, números e _)", chave ? chave : "");
+    return;
+  }
+  if (fabsf(valor) >= VALOR_LIMITE) {
+    log("valor de \"%s\" fora do intervalo aceito; ficou de fora", chave);
+    return;
+  }
   const float fator = powf(10, casas);
   _mensagem[chave] = roundf(valor * fator) / fator;
 }

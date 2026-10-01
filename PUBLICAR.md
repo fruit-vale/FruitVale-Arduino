@@ -16,7 +16,7 @@
 
 3. **Valide** (o mesmo teste que o registro faz):
    ```bash
-   arduino-lint --library-manager submit --compliance strict .
+   arduino-lint --library-manager submit --compliance strict "$PWD"
    ```
    Deve terminar com `0 ERRORS`.
 

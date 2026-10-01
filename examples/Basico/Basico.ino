@@ -2,9 +2,10 @@
 // Envia a temperatura interna do chip e o sinal do Wi-Fi: serve para testar a
 // conexão com a plataforma antes de ligar um sensor de verdade.
 //
-// No app FruitVale, cadastre o sensor com estes dados (chave no JSON):
-//   "Temperatura do chip"  →  temperatura_chip   (tipo Outro, unidade °C)
-//   "Sinal Wi-Fi"          →  sinal_wifi         (tipo Outro, unidade dBm)
+// No app FruitVale, cadastre o sensor com estes dados (o app gera a chave a
+// partir do nome; confira que ficou igual à usada abaixo):
+//   nome "Temperatura chip"  →  chave temperatura_chip   (tipo Outro, unidade °C)
+//   nome "Sinal WiFi"        →  chave sinal_wifi         (tipo Outro, unidade dBm)
 //
 // Primeiro uso: a placa cria a rede "FruitVale-XXXX" (senha "fruitvale").
 // Conecte o celular nela e preencha o Wi-Fi do local e o usuário/senha do

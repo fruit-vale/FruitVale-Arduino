@@ -9,8 +9,8 @@
 // (LEITURA_SECO) e mergulhado em água (LEITURA_MOLHADO) — o Serial mostra
 // esse valor a cada envio.
 //
-// No app FruitVale, cadastre o dado "Umidade do solo" (tipo Umidade do solo,
-// unidade %, chave umidade_solo). Configuração do Wi-Fi e do sensor: pelo
+// No app FruitVale, cadastre o dado "Umidade solo" (tipo Umidade do solo,
+// unidade %; o app gera a chave umidade_solo a partir do nome). Configuração do Wi-Fi e do sensor: pelo
 // portal (veja o exemplo Basico).
 
 #include <FruitVale.h>
